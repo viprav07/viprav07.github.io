@@ -11,11 +11,26 @@
         body {
             margin: 0;
             overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        h1 {
+            margin: 10px 0;
+            font-size: 24px;
+            color: #333;
+        }
+        p {
+            margin: 10px 0 20px;
+            font-size: 18px;
+            color: #555;
         }
         canvas {
             display: block;
-            width: 100vw; /* Full width of the viewport */
-            height: 100vh; /* Full height of the viewport */
+            border: 1px solid #ddd;
         }
         video {
             display: none; /* Hide the input video */
@@ -23,6 +38,8 @@
     </style>
 </head>
 <body>
+    <h1>Have Fun with the Hand Tracker Model Here</h1>
+    <p>Just a preview of the hand tracking model we are using in our project.</p>
     <video class="input_video"></video>
     <canvas class="output_canvas"></canvas>
     <script>
@@ -38,6 +55,7 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas(); // Initial resize
 
+        // Mediapipe Hands Setup
         const hands = new Hands({
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
         });
@@ -45,13 +63,27 @@
             maxNumHands: 2,
             modelComplexity: 1,
         });
+
         hands.onResults((results) => {
+            // Clear the canvas
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+            // Flip the canvas horizontally
+            canvasCtx.save();
+            canvasCtx.scale(-1, 1); // Flip horizontally
+            canvasCtx.translate(-canvasElement.width, 0); // Shift the flipped image back into view
+
+            // Draw the image onto the flipped canvas
             canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+            // Draw hand landmarks and connectors
             for (const landmarks of results.multiHandLandmarks) {
                 drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#00FF00', lineWidth: 5 });
                 drawLandmarks(canvasCtx, landmarks, { color: '#FF0000', lineWidth: 2 });
             }
+
+            // Restore canvas state to avoid affecting other drawings
+            canvasCtx.restore();
         });
 
         const camera = new Camera(videoElement, {
